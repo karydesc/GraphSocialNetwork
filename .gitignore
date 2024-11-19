@@ -6,10 +6,10 @@
 
 # BlueJ files
 *.ctxt
-
+2024f_alco_prj.pdf
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
-
+assignment-1.iml
 # Package Files #
 *.jar
 *.war
@@ -18,7 +18,9 @@
 *.zip
 *.tar.gz
 *.rar
-
+out
+.DS_Store
+.idea
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
