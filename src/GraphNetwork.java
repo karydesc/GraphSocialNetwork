@@ -70,6 +70,20 @@ public class GraphNetwork {
         }
     }
 
+    public String[][] getFriends(String x){ //returns a list of lists
+        User user = this.getUser(x);
+        int friendCount = this.adj_list.get(user).size();
+        String[][] temp = new String[friendCount][2];
+        Set keys = this.adj_list.get(user).keySet();
+        for (int i = 0; i < friendCount; i++) {
+            temp[i][0] = user.name;
+            temp[i][1] = user.uniqueID;
+        }
+        return temp;
+    }
+
+
+
     public int getUserCount(){
         return this.vCount;
     }

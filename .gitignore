@@ -9,6 +9,7 @@
 2024f_alco_prj.pdf
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
+GraphSocialNetwork.iml
 assignment-1.iml
 # Package Files #
 *.jar
