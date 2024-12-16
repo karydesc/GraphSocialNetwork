@@ -14,8 +14,8 @@
           <Menu mnemonicParsing="false" text="File">
             <items>
               <MenuItem fx:id="addNodeItem" mnemonicParsing="false" onAction="#menuAddNodeHandler" text="Add User" />
-                  <MenuItem mnemonicParsing="false" text="Remove User" />
-              <MenuItem fx:id="addConnectionItem" mnemonicParsing="false" text="Add Connection" />
+                  <MenuItem mnemonicParsing="false" text="Remove User" onAction="#menuRemoveNodeHandler"/>
+              <MenuItem fx:id="addConnectionItem" mnemonicParsing="false" text="Clear" onAction="#menuClearHandler" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Algorithms">
