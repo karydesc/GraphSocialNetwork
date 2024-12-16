@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Group?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="556.0" prefWidth="880.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.assign1.assignment.AppController">
+   <children>
+      <MenuBar fx:id="menuBar" prefHeight="18.0" prefWidth="600.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem fx:id="addNodeItem" mnemonicParsing="false" onAction="#menuAddNodeHandler" text="Add User" />
+                  <MenuItem mnemonicParsing="false" text="Remove User" />
+              <MenuItem fx:id="addConnectionItem" mnemonicParsing="false" text="Add Connection" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Algorithms">
+            <items>
+              <MenuItem mnemonicParsing="false" text="to be implemented" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <AnchorPane fx:id="graphArea" onMouseClicked="#CanvasClickHandler" prefHeight="527.0" prefWidth="880.0">
+         <children>
+            <Group fx:id="nodeGroup" />
+         </children>
+      </AnchorPane>
+   </children>
+</VBox>
