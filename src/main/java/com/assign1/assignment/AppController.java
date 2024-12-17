@@ -165,7 +165,7 @@ public class AppController {
 
             this.setOnDragDetected(mouseEvent -> {
                 this.startFullDrag();
-            });r
+            });
 
             this.setOnMouseDragReleased(mouseEvent -> {
                 if (mouseEvent.getGestureSource() instanceof NodeFX && mouseEvent.getSource() instanceof NodeFX) {
