@@ -19,7 +19,6 @@ public class AppController {
     Boolean addingNode = false;
     Boolean removingNode = false;
     ArrayList<NodeFX> circles = new ArrayList<>();
-//    Set<Node> users = new HashSet<>();
     ArrayList<Edge> edges = new ArrayList<>();
     @FXML
     AnchorPane graphArea = new AnchorPane();
@@ -85,7 +84,6 @@ public class AppController {
         for (NodeFX x : circles){ //finish cleaning up by updating the appcontroller arraylist as well
             deleteAdjacencyReference(x,node);
         }
-
         this.removingNode = false;
     }
 
@@ -95,13 +93,13 @@ public class AppController {
         popup.setContentText("Enter new username");
         popup.setTitle("Input");
         popup.showAndWait().ifPresent(input -> {
-            if (!nodeExists(input)){
+            if (!nodeExists(input)&&!input.isEmpty()){
                 NodeFX temp = new NodeFX(e.getX(), e.getY(), 27, input); // Use input from popup
                 circles.add(temp);
                 nodeGroup.getChildren().addAll(temp, temp.nodeLabel); // Add both Circle and Label to the Group
             }else{
                 Alert denied = new Alert(Alert.AlertType.ERROR);
-                denied.setHeaderText("User already exists!");
+                denied.setHeaderText("User already exists! (or you typed nothing)");
                 denied.setTitle("Ya silly goose...");
                 denied.show();
             }
@@ -195,6 +193,7 @@ public class AppController {
             for (NodeFX temp : this.adjacent){
                 System.out.println(temp.name+" ");
             }
+            System.out.println(String.format("\nTotal nodes: %s \nTotal Edges %s",circles.size(), edges.size()));
         });
         }
 
@@ -220,6 +219,35 @@ public class AppController {
             this.setStartY(source.getCenterY());
             this.setEndX(destination.getCenterX());
             this.setEndY(destination.getCenterY());
+
+            this.weightLabel.setOnMouseClicked(event ->{
+                TextInputDialog popup = new TextInputDialog();
+                popup.setTitle("Change weight");
+                popup.setHeaderText("Enter a value in range 0.1 - 1");
+
+                popup.showAndWait().ifPresent(input -> {//get new value
+                    Float value;
+                    try{//handle invalid input
+                        value = Float.parseFloat(input);
+                    }catch (Error e){
+                        return;
+                    }
+                    this.weightLabel.setText(value.toString());
+                    this.weight=value;
+
+                    Iterator<Edge> edgeIterator = edges.iterator();
+                    while (edgeIterator.hasNext()){ //changing the weight value
+                        Edge edge = edgeIterator.next();
+                        if (edge.source.equals(this.source) || edge.destination.equals(this.destination)){
+                            edge.weight=value;
+                        }
+                    }
+
+                    event.consume();
+
+
+                });
+            });
         }
     }
 
