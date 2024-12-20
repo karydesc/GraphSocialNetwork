@@ -8,24 +8,50 @@ import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.transform.Scale;
 
 import java.util.*;
 
 public class AppController {
+
     Boolean addingNode = false;
     Boolean removingNode = false;
-    ArrayList<NodeFX> circles = new ArrayList<>();
+    Map<String, NodeFX> circles = new HashMap<>();
     ArrayList<Edge> edges = new ArrayList<>();
     @FXML
-    AnchorPane graphArea = new AnchorPane();
+    AnchorPane graphArea;
     @FXML
-    Group nodeGroup = new Group();
+    Group nodeGroup;
     @FXML
-    MenuBar menuBar = new MenuBar();
+    MenuBar menuBar;
+    @FXML
+    ScrollPane scrollPane;
+
+    private Scale scale = new Scale(1, 1, 0, 0); // Default scaling factors
+
+    @FXML
+    public void initialize() {
+        // Add the scale transformation to the nodeGroup
+        nodeGroup.getTransforms().add(scale);
+
+        // Add scroll event listener to the ScrollPane
+        scrollPane.addEventFilter(ScrollEvent.SCROLL, this::handleZoom);
+    }
+
+    private void handleZoom(ScrollEvent event) {
+        if (event.isControlDown()) { // Only zoom when CTRL is held down
+            double zoomFactor = event.getDeltaY() > 0 ? 1.01 : 0.99; // Zoom in or out
+            scale.setX(scale.getX() * zoomFactor);
+            scale.setY(scale.getY() * zoomFactor);
+            event.consume();
+        }}
+
+
     @FXML
     public void CanvasClickHandler(MouseEvent e) {
         if (addingNode){
@@ -63,8 +89,9 @@ public class AppController {
     public void removeNode(NodeFX node){
         this.nodeGroup.getChildren().remove(node);  //removing the node, the label of the node from the actual group
         this.nodeGroup.getChildren().remove(node.nodeLabel);
-        this.circles.remove(node); //removing node from circles
+        this.circles.remove(node.name); //removing node from circles
         Iterator<Edge> edgeIterator = edges.iterator();
+
         while (edgeIterator.hasNext()){ //iterating through every edge, if edge contains the node that were deleting, delete the edge
             Edge edge = edgeIterator.next();
             if (edge.source.equals(node) || edge.destination.equals(node)){
@@ -74,16 +101,12 @@ public class AppController {
             }
         }
 
-        Iterator<NodeFX> nodeFXIterator = circles.iterator(); //iterating through all circles/ users
 
-        while(nodeFXIterator.hasNext()){
-            NodeFX temp = nodeFXIterator.next(); //iterating through every users adjacency list, passing reference as "temp" to the deleteAdjacencyReference method
-            deleteAdjacencyReference(temp, node);
+        Set<String> entries = circles.keySet();
+        for (String entry : entries){
+            deleteAdjacencyReference(circles.get(entry), node);
         }
 
-        for (NodeFX x : circles){ //finish cleaning up by updating the appcontroller arraylist as well
-            deleteAdjacencyReference(x,node);
-        }
         this.removingNode = false;
     }
 
@@ -93,13 +116,13 @@ public class AppController {
         popup.setContentText("Enter new username");
         popup.setTitle("Input");
         popup.showAndWait().ifPresent(input -> {
-            if (!nodeExists(input)&&!input.isEmpty()){
-                NodeFX temp = new NodeFX(e.getX(), e.getY(), 27, input); // Use input from popup
-                circles.add(temp);
+            if (!nodeExists(input)){
+                NodeFX temp = new NodeFX(e.getX(), e.getY(), 15, input); // Use input from popup
+                circles.put(input, temp);
                 nodeGroup.getChildren().addAll(temp, temp.nodeLabel); // Add both Circle and Label to the Group
             }else{
                 Alert denied = new Alert(Alert.AlertType.ERROR);
-                denied.setHeaderText("User already exists! (or you typed nothing)");
+                denied.setHeaderText("User already exists!");
                 denied.setTitle("Ya silly goose...");
                 denied.show();
             }
@@ -109,12 +132,7 @@ public class AppController {
     }
 
     public boolean nodeExists(String username) {
-        for (NodeFX node : circles) {
-            if (node.name.equals(username)) {
-                return true; // Found a node with the given username
-            }
-        }
-        return false; // No node with the given username
+        return circles.containsKey(username);
     }
 
     public void deleteAdjacencyReference(NodeFX targetNode, NodeFX nodeToRemove){
@@ -152,8 +170,8 @@ public class AppController {
             this.name = name;
             this.nodeLabel.setText(name);
             this.nodeLabel.setTextFill(Paint.valueOf("black"));
-            nodeLabel.setLayoutX(x-9);
-            nodeLabel.setLayoutY(y+35);
+            nodeLabel.setLayoutX(x-3);
+            nodeLabel.setLayoutY(y+16);
             this.setId(name);
 
             this.setOnMouseClicked(event -> {
@@ -193,7 +211,8 @@ public class AppController {
             for (NodeFX temp : this.adjacent){
                 System.out.println(temp.name+" ");
             }
-            System.out.println(String.format("\nTotal nodes: %s \nTotal Edges %s",circles.size(), edges.size()));
+
+            event.consume();
         });
         }
 
@@ -205,6 +224,7 @@ public class AppController {
         protected Float weight;
         protected Label weightLabel = new Label();
         Edge(AppController.NodeFX source, AppController.NodeFX destination, Float weight){
+            super(source.getCenterX(), source.getCenterY(), destination.getCenterX(), destination.getCenterY());
             this.source=source;
             this.destination=destination;
             this.weight=weight;
@@ -215,39 +235,27 @@ public class AppController {
             weightLabel.setTextFill(Paint.valueOf("Black"));
 
             this.setId(String.format("%s-%s",source.getId(),destination.getId()));
-            this.setStartX(source.getCenterX());
-            this.setStartY(source.getCenterY());
-            this.setEndX(destination.getCenterX());
-            this.setEndY(destination.getCenterY());
 
-            this.weightLabel.setOnMouseClicked(event ->{
-                TextInputDialog popup = new TextInputDialog();
-                popup.setTitle("Change weight");
-                popup.setHeaderText("Enter a value in range 0.1 - 1");
 
-                popup.showAndWait().ifPresent(input -> {//get new value
-                    Float value;
-                    try{//handle invalid input
-                        value = Float.parseFloat(input);
-                    }catch (Error e){
-                        return;
+            this.weightLabel.setOnMouseClicked(mouseEvent -> {
+                TextInputDialog popup = new TextInputDialog("Weight");
+                popup.setHeaderText("Please enter Connection Weight");
+                popup.showAndWait().ifPresent(input -> {
+                    if (Float.parseFloat(input)>=0.01F && Float.parseFloat(input)<=1){
+                        this.weight=Float.parseFloat(input);
+                        this.weightLabel.setText(input);
+                    }else{
+                        Alert warning = new Alert(Alert.AlertType.ERROR);
+                        warning.setTitle("Cannot Comply.");
+                        warning.setHeaderText("Use value 0.1 <-> 1.0");
+                        warning.show();
                     }
-                    this.weightLabel.setText(value.toString());
-                    this.weight=value;
-
-                    Iterator<Edge> edgeIterator = edges.iterator();
-                    while (edgeIterator.hasNext()){ //changing the weight value
-                        Edge edge = edgeIterator.next();
-                        if (edge.source.equals(this.source) || edge.destination.equals(this.destination)){
-                            edge.weight=value;
-                        }
-                    }
-
-                    event.consume();
-
-
                 });
             });
+        }
+
+        Boolean contains(NodeFX node){
+            return this.destination.equals(node) || this.source.equals(node);
         }
     }
 
