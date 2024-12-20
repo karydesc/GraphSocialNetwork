@@ -22,7 +22,7 @@ public class AppController {
     Boolean addingNode = false;
     Boolean removingNode = false;
     Map<String, NodeFX> circles = new HashMap<>();
-    ArrayList<Edge> edges = new ArrayList<>();
+    Map<NodeFX, Map<NodeFX, Edge>> adjList = new HashMap<>();
     @FXML
     AnchorPane graphArea;
     @FXML
@@ -68,8 +68,6 @@ public class AppController {
             removeNode((NodeFX) e.getTarget());
         }
     }
-
-
     public void menuAddNodeHandler(ActionEvent e){
         this.addingNode = true;
         this.removingNode=false;
@@ -82,34 +80,25 @@ public class AppController {
     }
     public void menuClearHandler(){
         this.circles.clear();
-        this.edges.clear();
+        this.adjList.clear();
         this.nodeGroup.getChildren().clear();
     }
 
     public void removeNode(NodeFX node){
         this.nodeGroup.getChildren().remove(node);  //removing the node, the label of the node from the actual group
         this.nodeGroup.getChildren().remove(node.nodeLabel);
-        this.circles.remove(node.name); //removing node from circles
-        Iterator<Edge> edgeIterator = edges.iterator();
+        this.circles.remove(node.getName()); //removing node from circles
 
-        while (edgeIterator.hasNext()){ //iterating through every edge, if edge contains the node that were deleting, delete the edge
-            Edge edge = edgeIterator.next();
-            if (edge.source.equals(node) || edge.destination.equals(node)){
-                nodeGroup.getChildren().remove(edge);
-                nodeGroup.getChildren().remove(edge.weightLabel);
-                edgeIterator.remove();
-            }
+        for (NodeFX user : adjList.get(node).keySet()){ //removing from UI
+            nodeGroup.getChildren().remove(adjList.get(node).get(user));
+            nodeGroup.getChildren().remove(adjList.get(node).get(user).weightLabel);
+            adjList.get(user).remove(node);
+            user.adjacent.remove(node); //update local adjacency list of the actual circles in the GUI
+
         }
-
-
-        Set<String> entries = circles.keySet();
-        for (String entry : entries){
-            deleteAdjacencyReference(circles.get(entry), node);
-        }
-
+        adjList.remove(node);
         this.removingNode = false;
     }
-
     public void addNode(MouseEvent e){
         TextInputDialog popup = new TextInputDialog();
         popup.setHeaderText("User Creation");
@@ -118,6 +107,7 @@ public class AppController {
         popup.showAndWait().ifPresent(input -> {
             if (!nodeExists(input)){
                 NodeFX temp = new NodeFX(e.getX(), e.getY(), 15, input); // Use input from popup
+                adjList.put(temp, new HashMap<>());
                 circles.put(input, temp);
                 nodeGroup.getChildren().addAll(temp, temp.nodeLabel); // Add both Circle and Label to the Group
             }else{
@@ -135,21 +125,10 @@ public class AppController {
         return circles.containsKey(username);
     }
 
-    public void deleteAdjacencyReference(NodeFX targetNode, NodeFX nodeToRemove){
-        Iterator<NodeFX> nodeFXIterator = targetNode.adjacent.iterator(); //iterate through adjlist of the targetnode, searching from nodetoremove
-        while (nodeFXIterator.hasNext()){//since we passed a reference, deleting the node here actually affects the actual users' objects on top level
-            NodeFX adjacentNode = nodeFXIterator.next();
-            if (adjacentNode.equals(nodeToRemove)){
-                nodeFXIterator.remove();
-                return;
-            }
-        }
-    }
-
     class NodeFX extends Circle{
-        String name;
-        Label nodeLabel = new Label();
-        Set<NodeFX> adjacent = new HashSet<>();
+         protected  String name;
+         protected  Label nodeLabel = new Label();
+         protected  Set<NodeFX> adjacent = new HashSet<>();
 
         public boolean equals (Object obj){
             if (obj instanceof NodeFX){
@@ -192,11 +171,15 @@ public class AppController {
                             NodeFX node1 = (NodeFX) mouseEvent.getGestureSource();
                             NodeFX node2 = (NodeFX) mouseEvent.getSource();
                             Edge temp = new Edge(node1, node2,  Float.parseFloat(input));
-                            edges.add(temp);
+
+                            adjList.get(node1).put(node2, temp);
+                            adjList.get(node2).put(node1, temp);
+
+                            node1.adjacent.add(node2);
+                            node2.adjacent.add(node1);
+
                             nodeGroup.getChildren().add(temp);
                             nodeGroup.getChildren().add(temp.weightLabel);
-                            ((NodeFX) mouseEvent.getSource()).adjacent.add(node1);
-                            ((NodeFX) mouseEvent.getGestureSource()).adjacent.add(node2);
                         }else{
                             Alert warning = new Alert(Alert.AlertType.ERROR);
                             warning.setTitle("Cannot Comply.");
@@ -206,16 +189,26 @@ public class AppController {
                     });
                 }
             });
-        this.setOnContextMenuRequested(event -> {
+            this.setOnContextMenuRequested(event -> {
             System.out.println("\n\nYou right-clicked: "+this.name + "\nThey are adjacent to: ");
             for (NodeFX temp : this.adjacent){
-                System.out.println(temp.name+" ");
+                System.out.println(temp.getName()+" ");
             }
 
             event.consume();
         });
         }
 
+        Label getLabel(){
+            return this.nodeLabel;
+        }
+        String getName(){
+            return name;
+        }
+
+        Set<NodeFX> getAdjacent(){
+            return adjacent;
+        }
     }
 
     public class Edge extends Line {
@@ -258,6 +251,8 @@ public class AppController {
             return this.destination.equals(node) || this.source.equals(node);
         }
     }
+
+
 
 
 }
