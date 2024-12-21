@@ -3,7 +3,6 @@ package com.assign1.assignment;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
@@ -14,11 +13,10 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.transform.Scale;
-
 import java.util.*;
 
 public class AppController {
-
+    Scanner scanner = new Scanner(System.in);
     Boolean addingNode = false;
     Boolean removingNode = false;
     Map<String, NodeFX> circles = new HashMap<>();
@@ -45,7 +43,7 @@ public class AppController {
 
     private void handleZoom(ScrollEvent event) {
         if (event.isControlDown()) { // Only zoom when CTRL is held down
-            double zoomFactor = event.getDeltaY() > 0 ? 1.01 : 0.99; // Zoom in or out
+            double zoomFactor = event.getDeltaY() > 0 ? 0.99 : 1.01; // Zoom in or out
             scale.setX(scale.getX() * zoomFactor);
             scale.setY(scale.getY() * zoomFactor);
             event.consume();
@@ -68,22 +66,51 @@ public class AppController {
             removeNode((NodeFX) e.getTarget());
         }
     }
+    @FXML
     public void menuAddNodeHandler(ActionEvent e){
         this.addingNode = true;
         this.removingNode=false;
 
     }
+    @FXML
     public void menuRemoveNodeHandler(ActionEvent e){
         this.removingNode = true;
         this.addingNode=false;
 
     }
+    @FXML
     public void menuClearHandler(){
         this.circles.clear();
         this.adjList.clear();
         this.nodeGroup.getChildren().clear();
     }
+    @FXML
+    public void addConnection(){
+        System.out.println("Enter user 1: ");
+        String user1 = scanner.nextLine();
+        System.out.println("\nEnter user 2: ");
+        String user2 = scanner.nextLine();
+        NodeFX node1 = circles.get(user1);
+        NodeFX node2 = circles.get(user2);
+        System.out.println("\nEnter Weights: ");
+        Float weight = scanner.nextFloat();
+        if (weight<0.01||weight>1||!nodeExists(user1)||!nodeExists(user2)){
+            System.out.println("\nno");
+            return;
+        }
+        Edge temp = new Edge(node1, node2,  weight);
 
+        adjList.get(node1).put(node2, temp);
+        adjList.get(node2).put(node1, temp);
+
+        node1.adjacent.add(node2);
+        node2.adjacent.add(node1);
+
+        nodeGroup.getChildren().add(temp);
+        nodeGroup.getChildren().add(temp.weightLabel);
+
+
+    }
     public void removeNode(NodeFX node){
         this.nodeGroup.getChildren().remove(node);  //removing the node, the label of the node from the actual group
         this.nodeGroup.getChildren().remove(node.nodeLabel);
@@ -99,6 +126,7 @@ public class AppController {
         adjList.remove(node);
         this.removingNode = false;
     }
+
     public void addNode(MouseEvent e){
         TextInputDialog popup = new TextInputDialog();
         popup.setHeaderText("User Creation");
@@ -192,7 +220,7 @@ public class AppController {
             this.setOnContextMenuRequested(event -> {
             System.out.println("\n\nYou right-clicked: "+this.name + "\nThey are adjacent to: ");
             for (NodeFX temp : this.adjacent){
-                System.out.println(temp.getName()+" ");
+                System.out.println(temp.getName()+" "+adjList.get(this).get(temp).getWeight()+" ");//get edge weight
             }
 
             event.consume();
@@ -216,6 +244,10 @@ public class AppController {
         protected NodeFX destination;
         protected Float weight;
         protected Label weightLabel = new Label();
+
+        Float getWeight(){
+            return weight;
+        }
         Edge(AppController.NodeFX source, AppController.NodeFX destination, Float weight){
             super(source.getCenterX(), source.getCenterY(), destination.getCenterX(), destination.getCenterY());
             this.source=source;

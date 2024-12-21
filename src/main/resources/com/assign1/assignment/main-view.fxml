@@ -16,12 +16,13 @@
                     <items>
                         <MenuItem fx:id="addNodeItem" mnemonicParsing="false" onAction="#menuAddNodeHandler" text="Add User" />
                         <MenuItem mnemonicParsing="false" onAction="#menuRemoveNodeHandler" text="Remove User" />
+                  <MenuItem mnemonicParsing="false" onAction="#addConnection" text="Add Connection" />
                         <MenuItem fx:id="addConnectionItem" mnemonicParsing="false" onAction="#menuClearHandler" text="Clear" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Algorithms">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="to be implemented" />
+                        <MenuItem mnemonicParsing="false" text="test" />
                     </items>
                 </Menu>
             </menus>
