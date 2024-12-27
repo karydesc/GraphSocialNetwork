@@ -1,6 +1,7 @@
 package com.assign1.assignment;
 
 import javafx.fxml.FXMLLoader;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
