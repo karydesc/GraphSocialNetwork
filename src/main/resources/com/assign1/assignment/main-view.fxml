@@ -14,6 +14,8 @@
             <menus>
                 <Menu mnemonicParsing="false" text="File">
                     <items>
+                  <MenuItem mnemonicParsing="false" onAction="#saveGraphHandler" text="Save" />
+                  <MenuItem mnemonicParsing="false" onAction="#loadFileHandler" text="Load" />
                         <MenuItem fx:id="addNodeItem" mnemonicParsing="false" onAction="#menuAddNodeHandler" text="Add User" />
                         <MenuItem mnemonicParsing="false" onAction="#menuRemoveNodeHandler" text="Remove User" />
                   <MenuItem mnemonicParsing="false" onAction="#addConnectionMenuHandler" text="Add Connection" />
