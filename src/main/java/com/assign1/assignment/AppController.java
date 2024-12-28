@@ -42,7 +42,7 @@ public class AppController {
     ScrollPane scrollPane;
     @FXML
     private void loadFileHandler(){ //handler for the menu button
-        menuClearHandler();//clear canvas
+        clearCanvas();//clear canvas
         AtomicReference<String> file = new AtomicReference<>(); //initialize atomic reference to store filename
         TextInputDialog popup = new TextInputDialog();
         popup.setContentText("Enter name of file");
@@ -113,7 +113,7 @@ public class AppController {
 
     }
     @FXML
-    public void menuClearHandler(){ //clear all data structures
+    public void clearCanvas(){ //clear all data structures
         this.circles.clear();
         this.adjList.clear();
         this.edges.clear();
@@ -136,6 +136,32 @@ public class AppController {
         addNodeThread.start();
 
 
+    }
+    @FXML
+    public void testGraphMenuHandler() {
+        clearCanvas();
+        AtomicReference<String> input = new AtomicReference<>(); //used to capture user input
+        TextInputDialog popup = new TextInputDialog(); //dialog to prompt user input
+        popup.setHeaderText("How many users to create?"); //set dialog header text
+        popup.setTitle("Despite everything, it's still you"); //set dialog title
+        popup.showAndWait().ifPresent(input::set); //wait for user input
+        int intInput = Integer.parseInt(input.get()); //parse the user input to an integer
+
+        int spacing = 100; //distance between nodes in both x and y directions
+        int rows = (int) Math.sqrt(intInput); //determine the number of rows based on the total number of nodes
+        int cols = (int) Math.ceil((double) intInput / rows); //determine the number of columns based on the number of rows
+
+        int currentNode = 0; //track how many nodes have been created
+        for (int i = 5; i < rows+5; i++) { //loop through rows with an offset of 10
+            for (int j = 5; j < cols+5; j++) { //loop through columns also with an offset
+                if (currentNode < intInput) { //only add nodes until the specified total is reached
+                    int x = j * spacing; //x-coordinate is based on column index and spacing
+                    int y = i * spacing; //y-coordinate is based on row index and spacing
+                    addNode(x, y, String.valueOf(currentNode)); //add node at calculated position with unique name
+                    currentNode++; //increment node count
+                }
+            }
+        }
     }
 
     private void addEdge(NodeFX node1, NodeFX node2, float weight) { //
@@ -160,7 +186,6 @@ public class AppController {
 
     @FXML
     public void dijkstraHandler(){ //creates a new thread to handle the algorithm, looks up the node instance of the given source and passes it to the runDijkstra method
-//        Map<NodeFX, Float> dijkstraTable = new HashMap<>();
         AtomicReference<NodeFX> source = new AtomicReference<>();
         TextInputDialog dialog = new TextInputDialog();
         dialog.setHeaderText("Dijkstra Algorithm");

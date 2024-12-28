@@ -16,13 +16,18 @@
                     <items>
                   <MenuItem mnemonicParsing="false" onAction="#saveGraphHandler" text="Save" />
                   <MenuItem mnemonicParsing="false" onAction="#loadFileHandler" text="Load" />
-                        <MenuItem fx:id="addNodeItem" mnemonicParsing="false" onAction="#menuAddNodeHandler" text="Add User" />
-                        <MenuItem mnemonicParsing="false" onAction="#menuRemoveNodeHandler" text="Remove User" />
-                  <MenuItem mnemonicParsing="false" onAction="#addConnectionMenuHandler" text="Add Connection" />
-                        <MenuItem fx:id="addConnectionItem" mnemonicParsing="false" onAction="#menuClearHandler" text="Clear" />
                   <MenuItem mnemonicParsing="false" onAction="#sampleHandler" text="Sample" />
                     </items>
                 </Menu>
+            <Menu mnemonicParsing="false" text="Edit">
+              <items>
+                        <MenuItem fx:id="addNodeItem" mnemonicParsing="false" onAction="#menuAddNodeHandler" text="Add User" />
+                        <MenuItem mnemonicParsing="false" onAction="#menuRemoveNodeHandler" text="Remove User" />
+                  <MenuItem mnemonicParsing="false" onAction="#addConnectionMenuHandler" text="Add Connection" />
+                        <MenuItem fx:id="addConnectionItem" mnemonicParsing="false" onAction="#clearCanvas" text="Clear" />
+                  <MenuItem mnemonicParsing="false" onAction="#testGraphMenuHandler" text="Test Graph" />
+              </items>
+            </Menu>
                 <Menu mnemonicParsing="false" text="Algorithms">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#dijkstraHandler" text="Dijkstra" />
