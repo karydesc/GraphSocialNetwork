@@ -14,6 +14,8 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.transform.Scale;
 
+import java.lang.reflect.Array;
+import java.util.random.RandomGenerator;
 import java.util.regex.*;
 import java.io.FileWriter;   // Import the FileWriter class
 import java.io.File;  // Import the File class
@@ -147,20 +149,32 @@ public class AppController {
         popup.showAndWait().ifPresent(input::set); //wait for user input
         int intInput = Integer.parseInt(input.get()); //parse the user input to an integer
 
-        int spacing = 100; //distance between nodes in both x and y directions
+        int spacing = 300; //distance between nodes in both x and y directions
         int rows = (int) Math.sqrt(intInput); //determine the number of rows based on the total number of nodes
         int cols = (int) Math.ceil((double) intInput / rows); //determine the number of columns based on the number of rows
-
+        RandomGenerator randomGenerator = new Random();
         int currentNode = 0; //track how many nodes have been created
         for (int i = 5; i < rows+5; i++) { //loop through rows with an offset of 10
             for (int j = 5; j < cols+5; j++) { //loop through columns also with an offset
                 if (currentNode < intInput) { //only add nodes until the specified total is reached
-                    int x = j * spacing; //x-coordinate is based on column index and spacing
-                    int y = i * spacing; //y-coordinate is based on row index and spacing
+                    int x = j * randomGenerator.nextInt(spacing-10, spacing+10); //x-coordinate is based on column index and spacing
+                    int y = i * randomGenerator.nextInt(spacing-10, spacing+10);; //y-coordinate is based on row index and spacing
                     addNode(x, y, String.valueOf(currentNode)); //add node at calculated position with unique name
                     currentNode++; //increment node count
                 }
             }
+        }
+        for (int i = 0; i <intInput ; i++) {
+            NodeFX user1 = (NodeFX) circles.values().toArray()[randomGenerator.nextInt(0, circles.size()-1)];
+            NodeFX user2 = (NodeFX) circles.values().toArray()[randomGenerator.nextInt(0, circles.size()-1)];
+
+            if (adjList.get(user1).containsKey(user2) || adjList.get(user2).containsKey(user1) || user1.equals(user2)) {
+                i--;
+                continue;
+            }
+            float[] values = {0.1F, 0.2F, 0.3F, 0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F , 1.0F};
+            addEdge(user1, user2,  values[randomGenerator.nextInt(0, values.length-1)]);
+
         }
     }
 
@@ -393,7 +407,7 @@ public class AppController {
                 }
             }
             try {
-                Thread.sleep(1000); //sleep for once second for visualization purposes
+                Thread.sleep(250); //sleep for once second for visualization purposes
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
