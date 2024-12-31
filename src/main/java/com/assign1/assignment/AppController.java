@@ -3,6 +3,7 @@ package com.assign1.assignment;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
@@ -97,6 +98,20 @@ public class AppController {
         }
     }
     @FXML
+    public void communityDetectionHandler(){
+        AtomicReference<String> weight = new AtomicReference<>();
+        TextInputDialog popup = new TextInputDialog();
+        popup.setHeaderText("Minimum connection weight");
+        popup.setContentText("Input float in range 0.01 - 1.0");
+        popup.setTitle("Input");
+        popup.showAndWait().ifPresent(weight::set);
+
+        Thread task = new Thread(() -> runCommunityDetection(Float.parseFloat(weight.get())));
+
+        task.setDaemon(true);
+        task.start();
+    }
+    @FXML
     public void handleNodeClick(MouseEvent e){
         if(removingNode){
             removeNode((NodeFX) e.getTarget());//when node is clicked in removing mode, call the removeNode method on the target node
@@ -178,26 +193,6 @@ public class AppController {
         }
     }
 
-    private void addEdge(NodeFX node1, NodeFX node2, float weight) { //
-        if (weight < 0.01 || weight > 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
-            System.out.println("\nno");
-            return;
-        }
-        Edge temp = new Edge(node1, node2, weight); //temp variable
-
-        adjList.get(node1).put(node2, temp); //update the two users' adj list entries
-        adjList.get(node2).put(node1, temp);
-
-        node1.adjacent.add(node2); //update inner neighbor node list for both users
-        node2.adjacent.add(node1);
-        edges.add(temp); //update this set too
-
-        nodeGroup.getChildren().add(temp); //add to actual UI
-        nodeGroup.getChildren().add(temp.weightLabel);
-
-        edgeCount++;
-    }
-
     @FXML
     public void dijkstraHandler(){ //creates a new thread to handle the algorithm, looks up the node instance of the given source and passes it to the runDijkstra method
         AtomicReference<NodeFX> source = new AtomicReference<>();
@@ -212,15 +207,22 @@ public class AppController {
             }
         });
         for (String x : circles.keySet()){ //prepare shortest distance labels for the graph
-            circles.get(x).dstToSource.setText("INF");
-            circles.get(x).dstToSource.setLayoutX(circles.get(x).getCenterX()+10);
-            circles.get(x).dstToSource.setLayoutY(circles.get(x).getCenterY()-35);
-            circles.get(x).dstToSource.setTextFill(Paint.valueOf("gray"));
+            NodeFX node = circles.get(x);
+            node.isActive=false;
+            node.isVisited=false;
+            node.minDistance=Float.MAX_VALUE;
+            node.previous=null;
+            node.reset();
+            node.dstToSource.setText("INF");
+            node.dstToSource.setLayoutX(circles.get(x).getCenterX()+10);
+            node.dstToSource.setLayoutY(circles.get(x).getCenterY()-35);
+            node.dstToSource.setTextFill(Paint.valueOf("gray"));
         }
         Thread dijkstraThread = new Thread(() -> runDijkstra(source.get()));
         dijkstraThread.setDaemon(true);
         dijkstraThread.start();
     }
+
     @FXML
     public void sampleHandler(){
         // Fixed node positions for visualization
@@ -328,6 +330,25 @@ public class AppController {
 
 
     } //creates a sample graph
+    private void addEdge(NodeFX node1, NodeFX node2, float weight) { //
+        if (weight < 0.01 || weight > 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
+            System.out.println("\nno");
+            return;
+        }
+        Edge temp = new Edge(node1, node2, weight); //temp variable
+
+        adjList.get(node1).put(node2, temp); //update the two users' adj list entries
+        adjList.get(node2).put(node1, temp);
+
+        node1.adjacent.add(node2); //update inner neighbor node list for both users
+        node2.adjacent.add(node1);
+        edges.add(temp); //update this set too
+
+        nodeGroup.getChildren().add(temp); //add to actual UI
+        nodeGroup.getChildren().add(temp.weightLabel);
+
+        edgeCount++;
+    }
 
     void removeNode(NodeFX node){
         this.nodeGroup.getChildren().remove(node);  //removing the node, the label of the node from the actual group
@@ -406,11 +427,11 @@ public class AppController {
                     priorityQueue.add(node); //readd the node with updated values
                 }
             }
-            try {
-                Thread.sleep(250); //sleep for once second for visualization purposes
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+//            try {
+//                Thread.sleep(250); //sleep for once second for visualization purposes
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
 
             Platform.runLater(() -> current.setVisited(true)); //set node as visited
 
@@ -446,7 +467,48 @@ public class AppController {
 
 
     }
+    void runCommunityDetection(float threshold){
+        Set<Set<NodeFX>> communities = new HashSet<>();
+        Set<NodeFX> visited = new HashSet<>();
 
+        for (String user : circles.keySet()) {
+            NodeFX node = circles.get(user);
+            if (!visited.contains(node)) {
+                Queue<NodeFX> fxQueue = new LinkedList<>();
+                Set<NodeFX> community = new HashSet<>();
+                fxQueue.add(node);
+
+                while (!fxQueue.isEmpty()) {
+                    NodeFX current = fxQueue.poll();
+                    community.add(current);
+                    visited.add(current);
+
+                    for (NodeFX x : current.getAdjacent()) {
+                        if (adjList.get(current).get(x).getWeight() >= threshold && !visited.contains(x)) {
+                            community.add(x);
+                            Platform.runLater(() -> x.setActive(true));
+                            fxQueue.add(x);
+                        }
+                    }
+                    // Normalize the community by converting to a sorted list, then back to a set
+                    Set<NodeFX> normalizedCommunity = new TreeSet<>(Comparator.comparing(NodeFX::getName));
+                    normalizedCommunity.addAll(community);
+
+                    // Only add if it's unique
+                    if (normalizedCommunity.size()>1) {
+                        communities.add(normalizedCommunity);
+}
+                }
+            }
+
+        }
+        for (Set<NodeFX> x : communities){
+            System.out.println("\n\nSeparator: ");
+            for (NodeFX c : x){
+                System.out.print("  "+c.name+"  ");
+            }
+        }
+    }
     class NodeFX extends Circle{
         protected  String name;
         protected  Label nodeLabel = new Label();
@@ -597,8 +659,7 @@ public class AppController {
                 myFile = new File(filename); //initialize file object with the given filename
                 myReader = new Scanner(myFile); //initialize scanner to read the file
             } catch (IOException e) {
-                System.out.println("An error occurred."); //error handling for file not found or reading issues
-                e.printStackTrace(); //print stack trace for debugging
+                System.out.println("An error occurred opening the file"); //error handling for file not found or reading issues
                 return; //exit the function on error
             }
             while (myReader.hasNext()) { //iterate through each line in the file
