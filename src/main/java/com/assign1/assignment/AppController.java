@@ -9,6 +9,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -41,9 +42,6 @@ public class AppController {
     AnchorPane graphArea; //ui element initializations
     @FXML
     Group nodeGroup;
-    @FXML
-    MenuBar menuBar;
-
     @FXML
     ScrollPane scrollPane;
     @FXML
@@ -231,7 +229,13 @@ public class AppController {
         popup.setHeaderText("How many users to create?"); //set dialog header text
         popup.setTitle("Despite everything, it's still you"); //set dialog title
         popup.showAndWait().ifPresent(input::set); //wait for user input
-        int intInput = Integer.parseInt(input.get()); //parse the user input to an integer
+        int intInput;
+        try {
+            intInput = Integer.parseInt(input.get());
+        } catch (Error e) {
+            System.out.println("Something went wrong when parsing the amount of nodes as integer");
+            return;
+        }
         if (intInput > 5000) return;
         int spacing = (int) (100 + 100 * Math.log(intInput)); //distance between nodes in both x and y directions
         int rows = (int) Math.sqrt(intInput); //determine the number of rows based on the total number of nodes
@@ -249,7 +253,7 @@ public class AppController {
                 }
             }
         }
-        for (int i = 0; i < intInput*2; i++) {
+        for (int i = 0; i < intInput * 2; i++) {
             NodeFX user1 = (NodeFX) circles.values().toArray()[randomGenerator.nextInt(0, circles.size() - 1)];
             NodeFX user2 = (NodeFX) circles.values().toArray()[randomGenerator.nextInt(0, circles.size() - 1)];
 
@@ -311,6 +315,8 @@ public class AppController {
 
         // Add scroll event listener to the ScrollPane
         scrollPane.addEventFilter(ScrollEvent.SCROLL, this::handleZoom);
+        scrollPane.addEventFilter(ZoomEvent.ZOOM, this::handleZoom);
+
     }
 
     private void handleZoom(ScrollEvent event) {
@@ -320,6 +326,11 @@ public class AppController {
             scale.setY(scale.getY() * zoomFactor);
             event.consume(); //consume event
         }
+    }
+    private void handleZoom(ZoomEvent event) {
+        scale.setX(scale.getX() * event.getZoomFactor()); //applying the scaling
+        scale.setY(scale.getY() * event.getZoomFactor());
+        event.consume(); //consume event
     }
 
     @FXML
@@ -621,7 +632,7 @@ public class AppController {
             });
             this.setOnContextMenuRequested(event -> {
                 StringBuilder stringToShow = new StringBuilder();
-                stringToShow = new StringBuilder("\n\nYou right-clicked: " + this.name + "\nThey are adjacent to: ");
+                stringToShow = new StringBuilder("You right-clicked node " + this.name + ":\nThey are adjacent to: ");
                 for (NodeFX temp : this.adjacent) {
                    stringToShow.append("\nNode ").append(temp.getName()).append(": weight=").append(adjList.get(this).get(temp).getWeight()).append(" ");//get edge weight
                 }
