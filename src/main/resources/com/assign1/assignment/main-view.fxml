@@ -32,6 +32,7 @@
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#dijkstraHandler" text="Dijkstra" />
                   <MenuItem mnemonicParsing="false" onAction="#communityDetectionHandler" text="Community Detection" />
+                  <MenuItem mnemonicParsing="false" onAction="#friendSuggestionHandler" text="Friend Suggestion" />
                     </items>
                 </Menu>
             </menus>
