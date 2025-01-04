@@ -3,10 +3,10 @@ package com.assign1.assignment;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
@@ -15,10 +15,8 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.transform.Scale;
-import jdk.incubator.vector.DoubleVector;
 
-import java.lang.reflect.Array;
-import java.util.function.Function;
+import java.awt.dnd.DragGestureEvent;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 import java.util.regex.*;
@@ -33,13 +31,37 @@ public class AppController {
     int userCount = 0;
     int edgeCount = 0;
     Scanner scanner = new Scanner(System.in);
+    protected Boolean addingNode = false;
+    protected Boolean removingNode = false;
+    Set<Edge> edges = new HashSet<>(); //keep track of edges in graph, used only when loading and saving from files to avoid iterating through adj nested hashmaps
+    EncoderDecoder encoderDecoder = new EncoderDecoder(); //used to encode and decode objects into and from files
+    Map<String, NodeFX> circles = new HashMap<>();  //to lookup nodeFX instances through their string name/id
+    Map<NodeFX, Map<NodeFX, Edge>> adjList = new HashMap<>(); //nested hashmap adjacency list, ex. to get chris and joes edge object -> hashmap.get(chris).get(joe).getWeight. simple and straightforward
+    @FXML
+    AnchorPane graphArea; //ui element initializations
+    @FXML
+    Group nodeGroup;
+    @FXML
+    MenuBar menuBar;
+
+    @FXML
+    ScrollPane scrollPane;
     @FXML
     public void handleNodeClick(MouseEvent e) {
         if (removingNode) {
             removeNode((NodeFX) e.getTarget());//when node is clicked in removing mode, call the removeNode method on the target node
         }
     }
-
+    @FXML
+    public void resetNodes(){
+        for (String x : circles.keySet()) {
+            NodeFX node = circles.get(x);
+            node.minDistance = Float.MAX_VALUE;
+            node.previous = null;
+            node.reset();
+            nodeGroup.getChildren().remove(node.dstToSource);
+        }
+    }
     @FXML
     public void menuAddNodeHandler() {
         this.addingNode = true; //simple flag toggling
@@ -59,7 +81,14 @@ public class AppController {
         this.addingNode = false;
 
     }
-
+    @FXML
+    public void menuInfoHandler(){
+        String stringToShow = "\nThere are " + userCount + " users in total, with " + edgeCount + "  edges connecting them";
+        Alert popup = new Alert(Alert.AlertType.INFORMATION);
+        popup.setHeaderText("Info about this graph: ");
+        popup.setContentText(stringToShow);
+        popup.show();
+    }
     @FXML
     public void clearCanvas() { //clear all data structures
         this.circles.clear();
@@ -220,7 +249,7 @@ public class AppController {
                 }
             }
         }
-        for (int i = 0; i < intInput; i++) {
+        for (int i = 0; i < intInput*2; i++) {
             NodeFX user1 = (NodeFX) circles.values().toArray()[randomGenerator.nextInt(0, circles.size() - 1)];
             NodeFX user2 = (NodeFX) circles.values().toArray()[randomGenerator.nextInt(0, circles.size() - 1)];
 
@@ -249,8 +278,6 @@ public class AppController {
         });
         for (String x : circles.keySet()) { //prepare shortest distance labels for the graph
             NodeFX node = circles.get(x);
-            node.isActive = false;
-            node.isVisited = false;
             node.minDistance = Float.MAX_VALUE;
             node.previous = null;
             node.reset();
@@ -263,22 +290,6 @@ public class AppController {
         dijkstraThread.setDaemon(true);
         dijkstraThread.start();
     }
-    protected Boolean addingNode = false;
-    protected Boolean removingNode = false;
-    Set<Edge> edges = new HashSet<>(); //keep track of edges in graph, used only when loading and saving from files to avoid iterating through adj nested hashmaps
-    EncoderDecoder encoderDecoder = new EncoderDecoder(); //used to encode and decode objects into and from files
-    Map<String, NodeFX> circles = new HashMap<>();  //to lookup nodeFX instances through their string name/id
-    Map<NodeFX, Map<NodeFX, Edge>> adjList = new HashMap<>(); //nested hashmap adjacency list, ex. to get chris and joes edge object -> hashmap.get(chris).get(joe).getWeight. simple and straightforward
-    @FXML
-    AnchorPane graphArea; //ui element initializations
-    @FXML
-    Group nodeGroup;
-    @FXML
-    MenuBar menuBar;
-
-    @FXML
-    ScrollPane scrollPane;
-
     @FXML
     private void loadFileHandler() { //handler for the menu button
         clearCanvas();//clear canvas
@@ -323,7 +334,7 @@ public class AppController {
     }
 
     @FXML
-    public void CanvasClickHandler(MouseEvent e) {
+    public void canvasClickHandler(MouseEvent e) {
         if (addingNode) { //if state boolean addingnode is active
             TextInputDialog popup = new TextInputDialog();
             popup.setHeaderText("User Creation");
@@ -338,6 +349,7 @@ public class AppController {
             removingNode = false;
         }
     }
+
 
     @FXML
     public void communityDetectionHandler() {
@@ -424,8 +436,6 @@ public class AppController {
     void runDijkstra(NodeFX source) {
         for (String x : circles.keySet()) { //set intial values on all nodes
             NodeFX node = circles.get(x);
-            node.isActive = false;
-            node.isVisited = false;
             node.minDistance = Float.MAX_VALUE;
             node.previous = null;
             Platform.runLater(node::reset);
@@ -456,11 +466,11 @@ public class AppController {
                     priorityQueue.add(node); //readd the node with updated values
                 }
             }
-//            try {
-//                Thread.sleep(250); //sleep for once second for visualization purposes
-//            } catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
+            try {
+                Thread.sleep(250); //sleep for once second for visualization purposes
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
 
             Platform.runLater(() -> current.setVisited(true)); //set node as visited
 
@@ -568,9 +578,6 @@ public class AppController {
         protected ArrayList<NodeFX> adjacent = new ArrayList<>();
         protected Float minDistance = Float.MAX_VALUE;
         protected Label dstToSource = new Label();
-        private boolean isActive;
-        private boolean isVisited;
-
         private NodeFX previous = null;
 
         public boolean equals(Object obj) {
@@ -599,7 +606,7 @@ public class AppController {
                 event.consume();
             });
 
-            this.setOnDragDetected((_) -> {
+            this.setOnDragDetected((e) -> {
                 this.startFullDrag();
             });
 
@@ -609,16 +616,52 @@ public class AppController {
                 popup.setHeaderText("Please enter Connection Weight");
                 popup.showAndWait().ifPresent(weight::set);
                 addEdge((NodeFX) mouseEvent.getGestureSource(), (NodeFX) mouseEvent.getSource(), Float.parseFloat(weight.get())); //create the edge
-
+                mouseEvent.consume();
 
             });
             this.setOnContextMenuRequested(event -> {
-                System.out.println("\n\nYou right-clicked: " + this.name + "\nThey are adjacent to: ");
+                StringBuilder stringToShow = new StringBuilder();
+                stringToShow = new StringBuilder("\n\nYou right-clicked: " + this.name + "\nThey are adjacent to: ");
                 for (NodeFX temp : this.adjacent) {
-                    System.out.println(temp.getName() + " " + adjList.get(this).get(temp).getWeight() + " ");//get edge weight
+                   stringToShow.append("\nNode ").append(temp.getName()).append(": weight=").append(adjList.get(this).get(temp).getWeight()).append(" ");//get edge weight
                 }
+                Alert popup = new Alert(Alert.AlertType.INFORMATION);
+                popup.setHeaderText("Info about this node: ");
+                popup.setContentText(stringToShow.toString());
+                popup.show();
+
 
                 event.consume();
+            });
+
+            this.setOnMouseDragged(e -> {
+                double parentOffsetX = e.getX();
+                double parentOffsetY = e.getY();
+
+                // Adjust position of the node itself
+                this.setCenterX(parentOffsetX);
+                this.setCenterY(parentOffsetY);
+
+                // Adjust position of the label
+                this.nodeLabel.setLayoutX(parentOffsetX - 3 - name.length() * 1.1);
+                this.nodeLabel.setLayoutY(parentOffsetY + 16);
+
+                // Update adjacent edges
+                for (NodeFX nodeadj : this.getAdjacent()) {
+                    Edge edge = adjList.get(this).get(nodeadj);
+                    if (edge.source.equals(this)) { //we need to adjust the correct end of the line as the edge source and destination properties are not guaranteed to be in the right order
+                        edge.setStartX(this.getCenterX());
+                        edge.setStartY(this.getCenterY());
+
+                    } else {
+                        edge.setEndX(this.getCenterX());
+                        edge.setEndY(this.getCenterY());
+                    }
+                    edge.weightLabel.setLayoutX((edge.destination.getCenterX() + edge.source.getCenterX()) / 2);
+                    edge.weightLabel.setLayoutY((edge.destination.getCenterY() + edge.source.getCenterY()) / 2 + 10);
+                }
+
+                e.consume();
             });
         }
 
@@ -636,8 +679,6 @@ public class AppController {
             } else {
                 this.setFill(Paint.valueOf("black"));
             }
-            this.isActive = b;
-            this.isVisited = !b;
         }
 
         void setVisited(Boolean b) {
@@ -646,8 +687,6 @@ public class AppController {
             } else {
                 this.setFill(Paint.valueOf("black"));
             }
-            this.isActive = !b;
-            this.isVisited = b;
         }
 
         void reset() {
@@ -661,7 +700,6 @@ public class AppController {
     }
 
     class Edge extends Line {
-        private boolean isActive;
         protected NodeFX source;
         protected NodeFX destination;
         protected Float weight;
