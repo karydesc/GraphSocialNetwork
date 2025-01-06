@@ -671,6 +671,10 @@ public class AppController {
                     edge.weightLabel.setLayoutX((edge.destination.getCenterX() + edge.source.getCenterX()) / 2);
                     edge.weightLabel.setLayoutY((edge.destination.getCenterY() + edge.source.getCenterY()) / 2 + 10);
                 }
+                if (!this.dstToSource.isNeedsLayout()){
+                    this.dstToSource.setLayoutX(this.getCenterX() + 10);
+                    this.dstToSource.setLayoutY(this.getCenterY() - 35);
+                }
 
                 e.consume();
             });
@@ -781,10 +785,19 @@ public class AppController {
                     Matcher matcher = pattern.matcher(line); //create a matcher for the current line
                     if (matcher.matches()) { //check if the line matches the regex pattern
                         // Parse the node details
-                        String name = matcher.group(1); //capture the name of the node
-                        Integer value1 = (int) Float.parseFloat(matcher.group(2)); //convert first value to an integer
-                        Integer value2 = (int) Float.parseFloat(matcher.group(3)); //convert second value to an integer
+                        String name;
+                        Integer value1;
+                        Integer value2;
+                        try {
+                            name = matcher.group(1); //capture the name of the node
+                            value1 = (int) Float.parseFloat(matcher.group(2)); //convert first value to an integer
+                            value2 = (int) Float.parseFloat(matcher.group(3)); //convert second value to an integer
+                        } catch (Exception e) {
+                            System.out.println("Error when parsing the coordinates in line: "+ line);
+                            continue;
+                        }
                         addNode(value1, value2, name); //add the parsed node to the graph
+                        userCount++;
                     }
 
                 } else if (line.charAt(0) == 'e') { //check if the line starts with 'e' (edge representation)
@@ -795,9 +808,11 @@ public class AppController {
                     if (matcher.matches()) { //check if the line matches the regex pattern
                         // Parse the edge details
                         String source = matcher.group(1); //capture the source node name
-                        String destination = matcher.group(2); //capture the destination node name
-                        float weight = Float.parseFloat(matcher.group(3)); //convert weight to a float
+                        String destination = matcher.group(2);//capture the destination node name
+                        float weight;
+                        try{weight = Float.parseFloat(matcher.group(3));}catch(Exception e){System.out.println("Error converting from float on line: "+line); continue;} //convert weight to a float
                         addEdge(circles.get(source), circles.get(destination), weight); //add the edge to the graph
+                        edgeCount++;
                     }
                 }
 
@@ -821,6 +836,7 @@ public class AppController {
             }
             myFile.close(); //close the file writer to save changes
         }
-    }}
+    }
+}
 
 
