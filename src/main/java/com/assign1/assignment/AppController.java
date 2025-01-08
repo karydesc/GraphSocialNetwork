@@ -50,6 +50,7 @@ public class AppController {
         scrollPane.addEventFilter(ZoomEvent.ZOOM, this::handleZoom);
 
     }
+    //menu item handlers
     @FXML
     private void resetNodes(){
         for (String x : circles.keySet()) {
@@ -377,7 +378,7 @@ public class AppController {
         friendSuggestion.start();
     }
 
-
+    //Graph operations
     private void addEdge(NodeFX node1, NodeFX node2, float weight) { //
         if (weight < 0.01 || weight > 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
             System.out.println("\nno");
@@ -474,6 +475,7 @@ public class AppController {
             this.setOnDragDetected((_) -> this.startFullDrag());
 
             this.setOnMouseDragReleased(mouseEvent -> {
+                if (mouseEvent.getSource().equals(mouseEvent.getGestureSource())) return; //edge case where shaking the mouse while holding a node could trigger an edge creation with the node itself
                 AtomicReference<String> weight = new AtomicReference<>();
                 TextInputDialog popup = new TextInputDialog("Weight");
                 popup.setHeaderText("Please enter Connection Weight");
