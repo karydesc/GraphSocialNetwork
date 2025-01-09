@@ -83,6 +83,7 @@ public class AppController {
     }
     @FXML
     private void clearCanvas() { //clear all data structures
+        this.userCount = this.edgeCount = 0;
         this.circles.clear();
         this.adjList.clear();
         this.edges.clear();
@@ -499,6 +500,7 @@ public class AppController {
             });
 
             this.setOnMouseDragged(e -> {
+                if (e.isAltDown()) return;
                 double parentOffsetX = e.getX();
                 double parentOffsetY = e.getY();
 
