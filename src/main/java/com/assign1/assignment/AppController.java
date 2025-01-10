@@ -400,7 +400,7 @@ public class AppController {
 
     //Graph operations
     private void addEdge(NodeFX node1, NodeFX node2, float weight) { //
-        if (weight <= 0.01 || weight >= 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
+        if (weight < 0.01 || weight > 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
             System.out.println("\nInvalid input for edge creation");
             return;
         }
@@ -582,7 +582,7 @@ public class AppController {
         }
 
         void setMinDistance(Float x) {
-            this.dstToSource.setText(String.valueOf(x));
+            this.dstToSource.setText(String.valueOf(x).substring(0,3));
         }
 
 
@@ -807,7 +807,7 @@ public class AppController {
                     community.add(current);
                     visited.add(current);
                     for (NodeFX x : current.getAdjacent()) {
-                        if (isEligibleForCommunity(x, community, threshold) && !visited.contains(x)) {
+                        if (adjList.get(current).get(x).getWeight() >= threshold && !visited.contains(x)) {
                             community.add(x);
                             Platform.runLater(() -> x.setFill(currentColor));
                             fxQueue.add(x);
@@ -834,14 +834,6 @@ public class AppController {
         }
     }
 
-    private boolean isEligibleForCommunity(NodeFX node, Set<NodeFX> community, float threshold) {
-        for (NodeFX communityNode : community) {
-            if (!communityNode.getAdjacent().contains(node) || adjList.get(communityNode).get(node).getWeight() < threshold) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     private void friendSuggestion() {
         Map<NodeFX, Set<NodeFX>> friendSuggestions = new HashMap<>(); //keep track of friend suggestions
