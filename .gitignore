@@ -196,3 +196,4 @@ $RECYCLE.BIN/
 .idea/compiler.xml
 .idea/jarRepositories.xml
 .idea/vcs.xml
+*.exe
