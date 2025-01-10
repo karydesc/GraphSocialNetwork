@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.Group?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
@@ -39,14 +40,17 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <ScrollPane fx:id="scrollPane" prefHeight="949.0" prefWidth="1418.0">
+        <ScrollPane fx:id="scrollPane" pannable="true" prefHeight="949.0" prefWidth="1418.0">
             <content>
-                <AnchorPane fx:id="graphArea" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#canvasClickHandler"  prefHeight="5000.0" prefWidth="5000.0">
+                <AnchorPane fx:id="graphArea" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#canvasClickHandler" prefHeight="5000.0" prefWidth="5000.0">
                     <children>
                         <Group fx:id="nodeGroup" />
                     </children>
                 </AnchorPane>
             </content>
+         <cursor>
+            <Cursor fx:constant="CROSSHAIR" />
+         </cursor>
         </ScrollPane>
     </children>
 </VBox>

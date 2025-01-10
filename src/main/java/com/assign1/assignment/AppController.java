@@ -50,9 +50,12 @@ public class AppController {
         // Add scroll event listener to the ScrollPane
         scrollPane.addEventFilter(ScrollEvent.SCROLL, this::handleZoom);
         scrollPane.addEventFilter(ZoomEvent.ZOOM, this::handleZoom);
+        scrollPane.addEventHandler(MouseEvent.MOUSE_MOVED,this::setScrollPane);
 
     }
-
+    private void setScrollPane(MouseEvent e){
+        scrollPane.setPannable(!e.isAltDown());
+    }
     //menu item handlers
     @FXML
     private void resetNodes() {
@@ -230,7 +233,7 @@ public class AppController {
         AtomicReference<String> input = new AtomicReference<>(); //used to capture user input
         TextInputDialog popup = new TextInputDialog(); //dialog to prompt user input
         popup.setHeaderText("How many users to create?"); //set dialog header text
-        popup.setTitle("Despite everything, it's still you"); //set dialog title
+        popup.setTitle("Random graph creation"); //set dialog title
         popup.showAndWait().ifPresent(input::set); //wait for user input
         int intInput;
         try {
@@ -285,7 +288,7 @@ public class AppController {
 
     private void handleZoom(ScrollEvent event) {
         if (event.isControlDown()) { // Only zoom when CTRL is held down
-            double zoomFactor = event.getDeltaY() > 0 ? 0.99 : 1.01; // Zoom in or out, getDelta returns the scroll direction (>0) multipliers can be changed to adjust scrolling speed
+            double zoomFactor = event.getDeltaY() > 0 ? 0.90 : 1.1; // Zoom in or out, getDelta returns the scroll direction (>0) multipliers can be changed to adjust scrolling speed
             scale.setX(scale.getX() * zoomFactor); //applying the scaling
             scale.setY(scale.getY() * zoomFactor);
             event.consume(); //consume event
@@ -321,7 +324,7 @@ public class AppController {
                 addNode((int) e.getX(), (int) e.getY(), input);
             });
         } else if (removingNode) { //else if the remove node state is enabled we simply handle this exception since the event handler for removing a node is on the node itself. (clicking the canvas does nothing)
-            Alert warning = new Alert(Alert.AlertType.WARNING, "Click on a node, not the background silly!");
+            Alert warning = new Alert(Alert.AlertType.WARNING, "Click on a node, not the background!");
             warning.show();
             removingNode = false;
         }
@@ -397,8 +400,8 @@ public class AppController {
 
     //Graph operations
     private void addEdge(NodeFX node1, NodeFX node2, float weight) { //
-        if (weight < 0.01 || weight > 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
-            System.out.println("\nno");
+        if (weight <= 0.01 || weight >= 1 || nodeDoesNotExist(node1) || nodeDoesNotExist(node2)) {
+            System.out.println("\nInvalid input for edge creation");
             return;
         }
         Edge temp = new Edge(node1, node2, weight); //temp variable
@@ -443,7 +446,7 @@ public class AppController {
         } else {
             Alert denied = new Alert(Alert.AlertType.ERROR);
             denied.setHeaderText("User already exists!");
-            denied.setTitle("Ya silly goose...");
+            denied.setTitle("Cannot comply");
             denied.show();
         }
         userCount++;
