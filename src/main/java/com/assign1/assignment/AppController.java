@@ -14,6 +14,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.transform.Scale;
+
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 import java.util.regex.*;
@@ -41,6 +42,7 @@ public class AppController {
     @FXML
     ScrollPane scrollPane;
     private final Scale scale = new Scale(1, 1, 0, 0); // Default scaling factors
+
     @FXML
     private void initialize() {
         // Add the scale transformation to the nodeGroup
@@ -50,9 +52,10 @@ public class AppController {
         scrollPane.addEventFilter(ZoomEvent.ZOOM, this::handleZoom);
 
     }
+
     //menu item handlers
     @FXML
-    private void resetNodes(){
+    private void resetNodes() {
         for (String x : circles.keySet()) {
             NodeFX node = circles.get(x);
             node.minDistance = Float.MAX_VALUE;
@@ -61,26 +64,30 @@ public class AppController {
             nodeGroup.getChildren().remove(node.dstToSource);
         }
     }
+
     @FXML
     private void menuAddNodeHandler() {
         this.addingNode = true; //simple flag toggling
         this.removingNode = false;
 
     }
+
     @FXML
     private void menuRemoveNodeHandler() {
         this.removingNode = true; //same here
         this.addingNode = false;
 
     }
+
     @FXML
-    private void menuInfoHandler(){
+    private void menuInfoHandler() {
         String stringToShow = "\nThere are " + userCount + " users in total, with " + edgeCount + "  edges connecting them";
         Alert popup = new Alert(Alert.AlertType.INFORMATION);
         popup.setHeaderText("Info about this graph: ");
         popup.setContentText(stringToShow);
         popup.show();
     }
+
     @FXML
     private void clearCanvas() { //clear all data structures
         this.userCount = this.edgeCount = 0;
@@ -89,6 +96,7 @@ public class AppController {
         this.edges.clear();
         this.nodeGroup.getChildren().clear();
     }
+
     @FXML
     private void sampleHandler() {
         // Fixed node positions for visualization
@@ -196,6 +204,7 @@ public class AppController {
 
 
     } //creates a sample graph
+
     @FXML
     private void addConnectionMenuHandler() { //create new thread to fetch inputs from the user in the terminal, then call the addEdge method in the main thread
         Thread addNodeThread = new Thread(() -> {
@@ -214,6 +223,7 @@ public class AppController {
 
 
     }
+
     @FXML
     private void testGraphMenuHandler() {
         clearCanvas();
@@ -235,8 +245,8 @@ public class AppController {
         int cols = (int) Math.ceil((double) intInput / rows); //determine the number of columns based on the number of rows
         RandomGenerator randomGenerator = new Random();
         int currentNode = 0; //track how many nodes have been created
-        for (int i = 1; i < rows+1; i++) { //loop through rows with an offset of 5
-            for (int j = 1; j < cols+1; j++) { //loop through columns also with an offset
+        for (int i = 1; i < rows + 1; i++) { //loop through rows with an offset of 5
+            for (int j = 1; j < cols + 1; j++) { //loop through columns also with an offset
                 if (currentNode < intInput) { //only add nodes until the specified total is reached
                     int x = j * randomGenerator.nextInt(spacing - 10, spacing + 10); //x-coordinate is based on column index and spacing
                     int y = i * randomGenerator.nextInt(spacing - 10, spacing + 10);
@@ -268,9 +278,11 @@ public class AppController {
         popup.setContentText("Enter name of file");
         popup.setHeaderText("Loading sequence engaged.");
         popup.setTitle("Race for e-unity");
-        popup.showAndWait().ifPresent(file::set); // get input and call set method of Atomic Reference
+        popup.showAndWait().ifPresent(file::set);// get input and call set method of Atomic Reference
+        if (popup.getResult() == null || popup.getResult().isEmpty()) return;
         encoderDecoder.readFromFile(file.get()); //call readFromFile method of encoder object
     }
+
     private void handleZoom(ScrollEvent event) {
         if (event.isControlDown()) { // Only zoom when CTRL is held down
             double zoomFactor = event.getDeltaY() > 0 ? 0.99 : 1.01; // Zoom in or out, getDelta returns the scroll direction (>0) multipliers can be changed to adjust scrolling speed
@@ -294,6 +306,7 @@ public class AppController {
         popup.setHeaderText("Saving sequence engaged.");
         popup.setTitle("The Future is Euro");
         popup.showAndWait().ifPresent(file::set);//same process to get filename
+        if (popup.getResult() == null || popup.getResult().isEmpty()) return;
         encoderDecoder.saveToFile(file.get()); //calling saveToFile method
     }
 
@@ -313,6 +326,7 @@ public class AppController {
             removingNode = false;
         }
     }
+
     @FXML
     private void handleNodeClick(MouseEvent e) {
         if (removingNode) {
@@ -332,19 +346,20 @@ public class AppController {
             NodeFX node = circles.get(x);
             node.setFill(Paint.valueOf("black"));
         }
-        if (Objects.equals(weight.get(), "")){
+        if (Objects.equals(weight.get(), "")) {
             weight.set("0.01");
         }
-        try{
+        try {
             Thread task = new Thread(() -> runCommunityDetection(Float.parseFloat(weight.get())));
             task.setDaemon(true);
             task.start();
-        }catch (Exception e){
+        } catch (Exception e) {
             System.err.println("Error parsing threshold input.");
         }
 
 
     }
+
     @FXML
     private void dijkstraHandler() { //creates a new thread to handle the algorithm, looks up the node instance of the given source and passes it to the runDijkstra method
         AtomicReference<NodeFX> source = new AtomicReference<>();
@@ -372,8 +387,9 @@ public class AppController {
         dijkstraThread.setDaemon(true);
         dijkstraThread.start();
     }
+
     @FXML
-    private void friendSuggestionHandler(){
+    private void friendSuggestionHandler() {
         Thread friendSuggestion = new Thread(this::friendSuggestion);
         friendSuggestion.setDaemon(true);
         friendSuggestion.start();
@@ -399,6 +415,7 @@ public class AppController {
 
         edgeCount++;
     }
+
     private void removeNode(NodeFX node) {
         this.nodeGroup.getChildren().remove(node);  //removing the node, the label of the node from the actual group
         this.nodeGroup.getChildren().remove(node.nodeLabel); //removing label
@@ -416,6 +433,7 @@ public class AppController {
         this.removingNode = false;
         userCount--;
     }
+
     private void addNode(Integer x, Integer y, String name) {
         if (!nodeExists(name)) { //if node doesn't already exist
             NodeFX temp = new NodeFX(x, y, 15, name);
@@ -435,6 +453,7 @@ public class AppController {
     private boolean nodeExists(String username) {
         return circles.containsKey(username);
     }
+
     private boolean nodeDoesNotExist(NodeFX user) {
         return !circles.containsValue(user);
     }
@@ -447,6 +466,7 @@ public class AppController {
         protected Float minDistance = Float.MAX_VALUE;
         protected Label dstToSource = new Label();
         private NodeFX previous = null;
+
         public boolean equals(Object obj) {
             if (obj instanceof NodeFX u) {
                 return Objects.equals(u.getId(), this.getId());
@@ -476,7 +496,8 @@ public class AppController {
             this.setOnDragDetected((_) -> this.startFullDrag());
 
             this.setOnMouseDragReleased(mouseEvent -> {
-                if (mouseEvent.getSource().equals(mouseEvent.getGestureSource())) return; //edge case where shaking the mouse while holding a node could trigger an edge creation with the node itself
+                if (mouseEvent.getSource().equals(mouseEvent.getGestureSource()))
+                    return; //edge case where shaking the mouse while holding a node could trigger an edge creation with the node itself
                 AtomicReference<String> weight = new AtomicReference<>();
                 TextInputDialog popup = new TextInputDialog("Weight");
                 popup.setHeaderText("Please enter Connection Weight");
@@ -488,7 +509,7 @@ public class AppController {
             this.setOnContextMenuRequested(event -> {
                 StringBuilder stringToShow = new StringBuilder("You right-clicked node " + this.name + ":\nThey are adjacent to: ");
                 for (NodeFX temp : this.adjacent) {
-                   stringToShow.append("\nNode ").append(temp.getName()).append(": weight=").append(adjList.get(this).get(temp).getWeight()).append(" ");//get edge weight
+                    stringToShow.append("\nNode ").append(temp.getName()).append(": weight=").append(adjList.get(this).get(temp).getWeight()).append(" ");//get edge weight
                 }
                 Alert popup = new Alert(Alert.AlertType.INFORMATION);
                 popup.setHeaderText("Info about this node: ");
@@ -526,7 +547,7 @@ public class AppController {
                     edge.weightLabel.setLayoutX((edge.destination.getCenterX() + edge.source.getCenterX()) / 2);
                     edge.weightLabel.setLayoutY((edge.destination.getCenterY() + edge.source.getCenterY()) / 2 + 10);
                 }
-                if (!this.dstToSource.isNeedsLayout()){
+                if (!this.dstToSource.isNeedsLayout()) {
                     this.dstToSource.setLayoutX(this.getCenterX() + 10);
                     this.dstToSource.setLayoutY(this.getCenterY() - 35);
                 }
@@ -563,6 +584,7 @@ public class AppController {
 
 
     }
+
     private class Edge extends Line {
 
         protected NodeFX source;
@@ -605,11 +627,13 @@ public class AppController {
         }
 
     }
+
     private class EncoderDecoder {
 
         String encode(NodeFX node) {
             return String.format("n[%s,%s,%s]\n", node.name, node.getCenterX(), node.getCenterY()); //example output n[A,100.0,150.0]
         }
+
         String encode(Edge edge) {
             return String.format("e[%s,%s,%s]\n", edge.source.name, edge.destination.name, edge.getWeight()); //example output e[D,F,0.5]
         }
@@ -641,7 +665,7 @@ public class AppController {
                             value1 = (int) Float.parseFloat(matcher.group(2)); //convert first value to an integer
                             value2 = (int) Float.parseFloat(matcher.group(3)); //convert second value to an integer
                         } catch (Exception e) {
-                            System.out.println("Error when parsing the coordinates in line: "+ line);
+                            System.out.println("Error when parsing the coordinates in line: " + line);
                             continue;
                         }
                         addNode(value1, value2, name); //add the parsed node to the graph
@@ -658,7 +682,12 @@ public class AppController {
                         String source = matcher.group(1); //capture the source node name
                         String destination = matcher.group(2);//capture the destination node name
                         float weight;
-                        try{weight = Float.parseFloat(matcher.group(3));}catch(Exception e){System.out.println("Error converting from float on line: "+line); continue;} //convert weight to a float
+                        try {
+                            weight = Float.parseFloat(matcher.group(3));
+                        } catch (Exception e) {
+                            System.out.println("Error converting from float on line: " + line);
+                            continue;
+                        } //convert weight to a float
                         addEdge(circles.get(source), circles.get(destination), weight); //add the edge to the graph
                         edgeCount++;
                     }
@@ -756,6 +785,7 @@ public class AppController {
 
 
     }
+
     private void runCommunityDetection(float threshold) {
         Supplier<Color> supplier = () -> Color.color(Math.random(), Math.random(), Math.random());
         Set<Set<NodeFX>> communities = new HashSet<>();
@@ -773,9 +803,8 @@ public class AppController {
                     NodeFX current = fxQueue.poll();
                     community.add(current);
                     visited.add(current);
-                    Platform.runLater(() -> current.setFill(currentColor));
                     for (NodeFX x : current.getAdjacent()) {
-                        if (adjList.get(current).get(x).getWeight() >= threshold && !visited.contains(x)) {
+                        if (isEligibleForCommunity(x, community, threshold) && !visited.contains(x)) {
                             community.add(x);
                             Platform.runLater(() -> x.setFill(currentColor));
                             fxQueue.add(x);
@@ -783,8 +812,14 @@ public class AppController {
                     }
                 }
                 // Normalize the community by converting to a sorted list, then back to a set
-                if(community.size()>1){
+                if (community.size() > 1) {
                     communities.add(community);
+                    Platform.runLater(() -> {
+                        for (NodeFX x : community){
+                            x.setFill(currentColor);
+                        }
+                    });
+
                 }
             }
         }
@@ -795,12 +830,22 @@ public class AppController {
             }
         }
     }
+
+    private boolean isEligibleForCommunity(NodeFX node, Set<NodeFX> community, float threshold) {
+        for (NodeFX communityNode : community) {
+            if (!communityNode.getAdjacent().contains(node) || adjList.get(communityNode).get(node).getWeight() < threshold) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void friendSuggestion() {
         Map<NodeFX, Set<NodeFX>> friendSuggestions = new HashMap<>(); //keep track of friend suggestions
-        for (String x : circles.keySet()){
+        for (String x : circles.keySet()) {
             NodeFX current = circles.get(x);
             friendSuggestions.put(current, new HashSet<>());
-            for (NodeFX adjNode1 : current.getAdjacent()){
+            for (NodeFX adjNode1 : current.getAdjacent()) {
                 for (NodeFX adjNode2 : adjNode1.getAdjacent()) {
                     if (!current.getAdjacent().contains(adjNode2) && !current.equals(adjNode2)) {
                         friendSuggestions.get(current).add(adjNode2);
